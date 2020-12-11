@@ -1,4 +1,13 @@
+/*
+ * logger.cpp
+ *
+ * Jared Koenig and Emery Weist
+ *
+ * 12/10/2020
+ */
+
 #include "../includes/logger.h"
+
 using namespace std;
 
 Logger::Logger(std::string filename) {
@@ -6,27 +15,47 @@ Logger::Logger(std::string filename) {
 }
 
 Logger::~Logger() {
+	if (myFile.is_open()) {
+		myFile.close();
+	}
 }
 
-//open close and clear the log file
+/*
+ * This function will be threadsafe
+ * because we us an explicitly scoped lock_guard
+ */
 void Logger::clearlogfile() {
-	myFile.open(filename, std::fstream::trunc);
+	{
+		std::lock_guard<std::mutex> lock(m);
 
-	//close file
-	if (myFile.is_open())
-		myFile.close();
+		myFile.open(filename, std::fstream::trunc);
+
+		if (myFile.is_open()) {
+			myFile.close();
+		}
+	}
 }
 
+/*
+ * This function will be threadsafe
+ * because we us an explicitly scoped lock_guard
+ */
 void Logger::log(std::string data) {
-	myFile.open(filename, std::fstream::app);
-	if (!myFile.is_open())
-		return;
 
-	std::string myline;
+	{
+		lock_guard<mutex> lock(m);
 
-	myFile << data;
+		myFile.open(filename, std::fstream::app);
+		if (!myFile.is_open()) {
+			return;
+		}
 
-	//close file
-	if (myFile.is_open())
-		myFile.close();
+		std::string myline;
+
+		myFile << data;
+
+		if (myFile.is_open()) {
+			myFile.close();
+		}
+	}
 }
