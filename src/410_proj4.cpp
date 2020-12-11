@@ -28,7 +28,7 @@ mutex mutex_order_outQ;
 condition_variable cv_order_inQ;
 
 //when true its time for the baker to quit
-bool b_WaiterIsFinished = false;	
+bool b_WaiterIsFinished = false;
 
 //where orders are stored
 queue<ORDER> order_in_Q;
@@ -40,8 +40,8 @@ mutex printMutex;
 //*************************************************
 //runs waiter until orders all read and placed
 //on order_in_Q then exits
-void doWaiter(int id,string fn) {
-	Waiter myWaiter(id,fn);
+void doWaiter(int id, string fn) {
+	Waiter myWaiter(id, fn);
 	myWaiter.beWaiter();
 }
 
@@ -60,23 +60,26 @@ void audit_results() {
 
 	int total_donuts = 0;
 	int total_orders = 0;
-	int total_boxes  = 0;
+	int total_boxes = 0;
 
 	//first go through every order
-	for (itOrder = order_out_Vector.begin(); itOrder != order_out_Vector.end(); itOrder++) {
+	for (itOrder = order_out_Vector.begin(); itOrder != order_out_Vector.end();
+			itOrder++) {
 		int numDonuts = 0;
 		total_orders++;
 
 		//for each order go through all the boxes and add up all the donuts
-		for (itBox = (itOrder->boxes).begin(); itBox != (itOrder->boxes).end(); ++itBox) {
+		for (itBox = (itOrder->boxes).begin(); itBox != (itOrder->boxes).end();
+				++itBox) {
 			total_boxes++;
 			numDonuts += itBox->size();
 			total_donuts += itBox->size();
 		}
 
 		//if one order was screwed up say so
-		if (numDonuts != itOrder->number_donuts) 
-			PRINT6("ERROR Order", itOrder->order_number, " Expected ", itOrder->number_donuts, " found ", numDonuts);
+		if (numDonuts != itOrder->number_donuts)
+			PRINT6("ERROR Order", itOrder->order_number, " Expected ",
+					itOrder->number_donuts, " found ", numDonuts);
 	}
 
 	PRINT2("Total donuts made   = ", total_donuts);
@@ -84,9 +87,19 @@ void audit_results() {
 	PRINT2("Total orders filled = ", total_orders);
 }
 
-int main()
-{
-	//TODO your code here
+int main() {
+	thread t2(doBaker, 1);
+	thread t3(doBaker, 2);
+	thread t4(doBaker, 3);
+	thread t(doWaiter, 1, "in3.txt");
+
+	t2.join();
+	t3.join();
+	t4.join();
+	t.join();
+
+	audit_results();
+
 	return SUCCESS;
 }
 
